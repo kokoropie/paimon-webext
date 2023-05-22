@@ -1,8 +1,44 @@
 import { onMessage, sendMessage } from 'webext-bridge'
-import { action, alarms, cookies, i18n, notifications, runtime, tabs } from 'webextension-polyfill'
-import type { Cookies, Notifications } from 'webextension-polyfill'
-import type { IAlertSetting, IAlertStatus, ICaptchaRequest, IRoleDataItem, IUserData, IUserDataItem } from '~/types'
-import { calcRoleDataLocally, createVerification, getGeetestChallenge, getRandomTimeOffset, getRoleDataByCookie, getRoleInfoByCookie, readDataFromStorage, verifyVerification, writeDataToStorage } from '~/utils'
+import {
+  action,
+  alarms,
+  i18n,
+  notifications,
+  runtime,
+  tabs,
+} from 'webextension-polyfill'
+import type { Notifications } from 'webextension-polyfill'
+import type {
+  IAlertSetting,
+  IAlertStatus,
+  ICaptchaRequest,
+  IRoleDataItem,
+  IUserData,
+  IUserDataItem,
+} from '~/types'
+import {
+  calcRoleDataLocally,
+  createVerification,
+  getGeetestChallenge,
+  getRandomTimeOffset,
+  getRoleDataByCookie,
+  getRoleInfoByCookie,
+  readDataFromStorage,
+  verifyVerification,
+  writeDataToStorage,
+} from '~/utils/utils'
+import { isFirefox } from '~/env'
+import {
+  clearHoYoLABCookie,
+  clearMiHoYoCookie,
+  getHoYoLABCookie,
+  getMiHoYoCookie,
+} from '~/utils/cookie'
+import {
+  initResponseRules,
+  resetRules,
+  setExtraHeaders,
+} from '~/utils/networkHook'
 
 // 一分钟
 const INTERVAL_TIME = 1
@@ -25,7 +61,9 @@ const defaultAlertStatus: IAlertStatus = {
 // 通知图标路径
 const notificationIconList = {
   resin: runtime.getURL('/assets/notifications/icon_resin.png'),
-  realmCurrency: runtime.getURL('/assets/notifications/icon_realm_currency.png'),
+  realmCurrency: runtime.getURL(
+    '/assets/notifications/icon_realm_currency.png',
+  ),
   transformer: runtime.getURL('/assets/notifications/icon_transformer.png'),
 }
 
@@ -38,21 +76,27 @@ const getNotificationMap = async (): Promise<Record<string, IAlertStatus>> => {
   return JSON.parse(await readDataFromStorage('notificationMap', '{}'))
 }
 
-const getNotificationItem = async (uid: string): Promise<false | IAlertStatus> => {
+const getNotificationItem = async (
+  uid: string,
+): Promise<false | IAlertStatus> => {
   const map = await getNotificationMap()
   return map[uid] || false
 }
 
-const setNotificationItem = async (uid: string, item: IAlertStatus): Promise<void> => {
+const setNotificationItem = async (
+  uid: string,
+  item: IAlertStatus,
+): Promise<void> => {
   const map = await getNotificationMap()
   map[uid] = item
   await writeDataToStorage('notificationMap', JSON.stringify(map))
 }
-
 // type: 0 resin; 1 realmCurrency; 2 transformer
-const showNotification = async (alertStatus: IAlertStatus, type: 0 | 1 | 2, scope: any) => {
-  // @ts-expect-error: update 方法在 firefox 中不存在
-  const isFirefox = !notifications.update
+const showNotification = async (
+  alertStatus: IAlertStatus,
+  type: 0 | 1 | 2,
+  scope: any,
+) => {
   if (!isFirefox) {
     // chromium 系浏览器
     if (type === 0) {
@@ -61,32 +105,37 @@ const showNotification = async (alertStatus: IAlertStatus, type: 0 | 1 | 2, scop
         iconUrl: notificationIconList.resin,
         title: i18n.getMessage('options_Alert_Notify_Title'),
         message: i18n.getMessage('options_Alert_Notify_Resin', [scope.resin]),
-        contextMessage: `${scope.name}(${scope.uid}) - ${i18n.getMessage(scope.server)}`,
+        contextMessage: `${scope.name}(${scope.uid}) - ${i18n.getMessage(
+          scope.server,
+        )}`,
       }
 
       if (alertStatus.resin === '') {
         // 创建通知
         alertStatus.resin = randomNotificationId()
         notifications.create(alertStatus.resin, notificationData)
-      }
-      else {
+      } else {
         // 更新通知
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const _ret = await notifications.update(alertStatus.resin, notificationData)
+        const _ret = await notifications.update(
+          alertStatus.resin,
+          notificationData,
+        )
 
         // if (!_ret) {
         //   alertStatus.resin = randomNotificationId()
         //   notifications.create(alertStatus.resin, notificationData)
         // }
       }
-    }
-    else if (type === 1) {
+    } else if (type === 1) {
       const notificationData: Notifications.CreateNotificationOptions = {
         type: 'basic',
         iconUrl: notificationIconList.realmCurrency,
         title: i18n.getMessage('options_Alert_Notify_Title'),
         message: i18n.getMessage('options_Alert_Notify_RealmCurrency'),
-        contextMessage: `${scope.name}(${scope.uid}) - ${i18n.getMessage(scope.server)}`,
+        contextMessage: `${scope.name}(${scope.uid}) - ${i18n.getMessage(
+          scope.server,
+        )}`,
       }
 
       if (alertStatus.realmCurrency === '') {
@@ -94,14 +143,15 @@ const showNotification = async (alertStatus: IAlertStatus, type: 0 | 1 | 2, scop
         alertStatus.realmCurrency = randomNotificationId()
         notifications.create(alertStatus.realmCurrency, notificationData)
       }
-    }
-    else if (type === 2) {
+    } else if (type === 2) {
       const notificationData: Notifications.CreateNotificationOptions = {
         type: 'basic',
         iconUrl: notificationIconList.transformer,
         title: i18n.getMessage('options_Alert_Notify_Title'),
         message: i18n.getMessage('options_Alert_Notify_Transformer'),
-        contextMessage: `${scope.name}(${scope.uid}) - ${i18n.getMessage(scope.server)}`,
+        contextMessage: `${scope.name}(${scope.uid}) - ${i18n.getMessage(
+          scope.server,
+        )}`,
       }
 
       if (alertStatus.transformer === '') {
@@ -110,15 +160,17 @@ const showNotification = async (alertStatus: IAlertStatus, type: 0 | 1 | 2, scop
         notifications.create(alertStatus.transformer, notificationData)
       }
     }
-  }
-  else {
+  } else {
     // firefox 浏览器
     if (type === 0) {
       const notificationData: Notifications.CreateNotificationOptions = {
         type: 'basic',
         iconUrl: notificationIconList.resin,
         title: i18n.getMessage('options_Alert_Notify_Title'),
-        message: i18n.getMessage('options_Alert_Notify_Resin_Firefox', [`${scope.name}(${scope.uid})`, scope.resin]),
+        message: i18n.getMessage('options_Alert_Notify_Resin_Firefox', [
+          `${scope.name}(${scope.uid})`,
+          scope.resin,
+        ]),
       }
 
       if (alertStatus.resin === '') {
@@ -126,13 +178,14 @@ const showNotification = async (alertStatus: IAlertStatus, type: 0 | 1 | 2, scop
         alertStatus.resin = randomNotificationId()
         notifications.create(alertStatus.resin, notificationData)
       }
-    }
-    else if (type === 1) {
+    } else if (type === 1) {
       const notificationData: Notifications.CreateNotificationOptions = {
         type: 'basic',
         iconUrl: notificationIconList.realmCurrency,
         title: i18n.getMessage('options_Alert_Notify_Title'),
-        message: i18n.getMessage('options_Alert_Notify_RealmCurrency_Firefox', [`${scope.name}(${scope.uid})`]),
+        message: i18n.getMessage('options_Alert_Notify_RealmCurrency_Firefox', [
+          `${scope.name}(${scope.uid})`,
+        ]),
       }
 
       if (alertStatus.realmCurrency === '') {
@@ -140,13 +193,14 @@ const showNotification = async (alertStatus: IAlertStatus, type: 0 | 1 | 2, scop
         alertStatus.realmCurrency = randomNotificationId()
         notifications.create(alertStatus.realmCurrency, notificationData)
       }
-    }
-    else if (type === 2) {
+    } else if (type === 2) {
       const notificationData: Notifications.CreateNotificationOptions = {
         type: 'basic',
         iconUrl: notificationIconList.transformer,
         title: i18n.getMessage('options_Alert_Notify_Title'),
-        message: i18n.getMessage('options_Alert_Notify_Transformer_Firefox', [`${scope.name}(${scope.uid})`]),
+        message: i18n.getMessage('options_Alert_Notify_Transformer_Firefox', [
+          `${scope.name}(${scope.uid})`,
+        ]),
       }
 
       if (alertStatus.transformer === '') {
@@ -164,14 +218,12 @@ const removeNotification = (alertStatus: IAlertStatus, type: 0 | 1 | 2) => {
       notifications.clear(alertStatus.resin)
       alertStatus.resin = ''
     }
-  }
-  else if (type === 1) {
+  } else if (type === 1) {
     if (alertStatus.realmCurrency !== '') {
       notifications.clear(alertStatus.realmCurrency)
       alertStatus.realmCurrency = ''
     }
-  }
-  else if (type === 2) {
+  } else if (type === 2) {
     if (alertStatus.transformer !== '') {
       notifications.clear(alertStatus.transformer)
       alertStatus.transformer = ''
@@ -182,77 +234,7 @@ const removeNotification = (alertStatus: IAlertStatus, type: 0 | 1 | 2) => {
 // selected uid
 let selectedUid = ''
 
-const targetPages = [
-  'https://api-os-takumi.mihoyo.com/binding/api/getUserGameRolesByCookie?game_biz=hk4e_global',
-  'https://api-takumi.mihoyo.com/binding/api/getUserGameRolesByCookieToken?game_biz=hk4e_cn',
-  'https://bbs-api-os.hoyolab.com/game_record/app/genshin/api/dailyNote*',
-  'https://api-takumi-record.mihoyo.com/game_record/app/genshin/api/dailyNote*',
-  'https://api-takumi-record.mihoyo.com/game_record/app/card/wapi/createVerification*',
-  'https://api-takumi-record.mihoyo.com/game_record/app/card/wapi/verifyVerification*',
-  'https://bbs-api-os.hoyolab.com/game_record/app/card/wapi/createVerification*',
-  'https://bbs-api-os.hoyolab.com/game_record/app/card/wapi/verifyVerification*',
-  'https://apiv6.geetest.com/ajax.php?pt=3&client_type=web_mobile&lang=zh-cn*',
-]
-
-let currentCookie = ''
-let currentReferer = ''
-let currentUA = ''
-const ruleID = 114514
-
-const updateRules = async (ignoreCookie = false) => {
-  const rules = []
-  for (let i = 0; i < targetPages.length; i++) {
-    rules.push({
-      id: ruleID + i,
-      priority: 1,
-      action: {
-        type: 'modifyHeaders',
-        requestHeaders: [
-          { header: 'Cookie', operation: 'set', value: ignoreCookie ? '' : currentCookie },
-          { header: 'Referer', operation: 'set', value: currentReferer },
-          { header: 'Origin', operation: 'set', value: currentReferer },
-          { header: 'User-Agent', operation: 'set', value: currentUA },
-        ],
-      },
-      condition: { urlFilter: targetPages[i] },
-    })
-  }
-
-  await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: [ruleID, ruleID + 1, ruleID + 2, ruleID + 3, ruleID + 4, ruleID + 5, ruleID + 6, ruleID + 7, ruleID + 8], addRules: rules })
-}
-
-const resetRules = async () => {
-  await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: [ruleID, ruleID + 1, ruleID + 2, ruleID + 3, ruleID + 4, ruleID + 5, ruleID + 6, ruleID + 7, ruleID + 8] })
-}
-
-const responseRuleID = 19198
-
-const initResponseRules = async () => {
-  const rules = []
-  for (let i = 0; i < targetPages.length; i++) {
-    rules.push({
-      id: responseRuleID + i,
-      priority: 1,
-      action: {
-        type: 'modifyHeaders',
-        responseHeaders: [
-          { header: 'set-cookie', operation: 'set', value: '' },
-        ],
-      },
-      condition: { urlFilter: targetPages[i] },
-    })
-  }
-
-  await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: [responseRuleID, responseRuleID + 1, responseRuleID + 2, responseRuleID + 3, responseRuleID + 4, responseRuleID + 5, responseRuleID + 6, responseRuleID + 7, responseRuleID + 8], addRules: rules })
-}
-
 initResponseRules()
-
-// webRequest.onBeforeSendHeaders.addListener(
-//   rewriteCookieHeader,
-//   { urls: targetPages },
-//   ['blocking', 'requestHeaders', chrome.webRequest.OnBeforeSendHeadersOptions.EXTRA_HEADERS].filter(Boolean),
-// )
 
 const getSelectedUid = async () => {
   return await readDataFromStorage<string>('selectedRole', '')
@@ -274,62 +256,16 @@ const setBadgeVisibility = async (visibility: boolean) => {
   await writeDataToStorage('badgeVisibility', visibility)
 }
 
-// 获取国服cookie
-const getMiHoYoCookie = async function () {
-  let cookieString = ''
-  let _cookies = await cookies.getAll({ domain: 'miyoushe.com' })
-  // 过滤name相同的cookies
-  _cookies = _cookies.filter((cookie, index, self) => self.findIndex((t) => t.name === cookie.name) === index)
-  if (_cookies.length !== 0) {
-    cookieString = ''
-    for (const cookie of _cookies)
-      cookieString += `${cookie.name}=${cookie.value};`
-    return cookieString
-  }
-  else {
-    return ''
-  }
-}
-
-// 获取海外cookie
-const getHoYoLABCookie = async function () {
-  let cookieString = ''
-  const _cookies = await cookies.getAll({ domain: 'hoyolab.com' })
-  if (_cookies.length !== 0) {
-    cookieString = ''
-    for (const cookie of _cookies)
-      cookieString += `${cookie.name}=${cookie.value};`
-    return cookieString
-  }
-  else {
-    return ''
-  }
-}
-
-const clearMiHoYoCookie = async function () {
-  const originCookieList: Cookies.Cookie[] = await cookies.getAll({ domain: 'miyoushe.com' })
-  const cookieList: Cookies.RemoveDetailsType[] = originCookieList.map((cookie) => ({
-    name: cookie.name,
-    url: 'https://miyoushe.com',
-  }))
-  for (const cookie of cookieList)
-    await cookies.remove(cookie)
-}
-
-const clearHoYoLABCookie = async function () {
-  const originCookieList: Cookies.Cookie[] = await cookies.getAll({ domain: 'hoyolab.com' })
-  const cookieList: Cookies.RemoveDetailsType[] = originCookieList.map((cookie) => ({
-    name: cookie.name,
-    url: 'https://hoyolab.com',
-  }))
-
-  for (const cookie of cookieList)
-    await cookies.remove(cookie)
-}
-
-const addNewRoleToList = async function (oversea: boolean, roleInfo: IRoleDataItem, cookie: string) {
+const addNewRoleToList = async function (
+  oversea: boolean,
+  roleInfo: IRoleDataItem,
+  cookie: string,
+) {
   // 取出原始 roleList
-  const originRoleList = await readDataFromStorage<IUserDataItem[]>('roleList', [])
+  const originRoleList = await readDataFromStorage<IUserDataItem[]>(
+    'roleList',
+    [],
+  )
 
   // 判断是否已经存在
   const isExist = originRoleList.some((item) => {
@@ -353,8 +289,7 @@ const addNewRoleToList = async function (oversea: boolean, roleInfo: IRoleDataIt
   // 如果不存在，则添加
   if (!isExist) {
     originRoleList.push(roleItem)
-  }
-  else {
+  } else {
     // 如果存在，则更新
     const index = originRoleList.findIndex((item) => {
       return item.uid === roleInfo.game_uid
@@ -369,14 +304,19 @@ const addNewRoleToList = async function (oversea: boolean, roleInfo: IRoleDataIt
 let alertSettings: IAlertSetting = defaultAlertSetting;
 
 (async function () {
-  alertSettings = await readDataFromStorage<IAlertSetting>('alertSetting', defaultAlertSetting)
+  alertSettings = await readDataFromStorage<IAlertSetting>(
+    'alertSetting',
+    defaultAlertSetting,
+  )
 })()
 
 const doAlertCheck = async function (roleInfo: IUserDataItem) {
   if (!roleInfo.enabledAlert)
     return
 
-  const _notificationStatus: IAlertStatus = (await getNotificationItem(roleInfo.uid)) || JSON.parse(JSON.stringify(defaultAlertStatus)) as IAlertStatus
+  const _notificationStatus: IAlertStatus
+    = (await getNotificationItem(roleInfo.uid))
+    || (JSON.parse(JSON.stringify(defaultAlertStatus)) as IAlertStatus)
 
   // 树脂检查
   if (alertSettings.resin) {
@@ -387,34 +327,37 @@ const doAlertCheck = async function (roleInfo: IUserDataItem) {
         server: roleInfo.serverRegion,
         resin: roleInfo.data.current_resin,
       })
-    }
-    else {
+    } else {
       removeNotification(_notificationStatus, 0)
     }
   }
   // 洞天宝钱检查
   if (alertSettings.realmCurrency) {
-    if (roleInfo.data.current_home_coin === roleInfo.data.max_home_coin && roleInfo.data.current_home_coin > 0) {
+    if (
+      roleInfo.data.current_home_coin === roleInfo.data.max_home_coin
+      && roleInfo.data.current_home_coin > 0
+    ) {
       showNotification(_notificationStatus, 1, {
         name: roleInfo.nickname,
         uid: roleInfo.uid,
         server: roleInfo.serverRegion,
       })
-    }
-    else {
+    } else {
       removeNotification(_notificationStatus, 1)
     }
   }
   // 参量质变仪检查
   if (alertSettings.transformer) {
-    if (roleInfo.data.transformer.obtained && roleInfo.data.transformer.recovery_time.reached) {
+    if (
+      roleInfo.data.transformer.obtained
+      && roleInfo.data.transformer.recovery_time.reached
+    ) {
       showNotification(_notificationStatus, 2, {
         name: roleInfo.nickname,
         uid: roleInfo.uid,
         server: roleInfo.serverRegion,
       })
-    }
-    else {
+    } else {
       removeNotification(_notificationStatus, 2)
     }
   }
@@ -427,10 +370,16 @@ const getLatestUpdatedTime = function (role: IUserDataItem) {
   return role.updateTimestamp
 }
 
-const refreshData = async function (uiOnly = false, fromPopup = false, forceRefresh = false) {
+const refreshData = async function (
+  uiOnly = false,
+  fromPopup = false,
+  forceRefresh = false,
+) {
   // 取出刷新时间间隔 (原始数据为分钟，这里转换为毫秒)
   // 如果 fromPopup 为 true，则间隔时间设置为 2 分钟
-  let refreshInterval = fromPopup ? 60 * 1000 : (await getRefreshInterval()) * 60 * 1000 * 2
+  let refreshInterval = fromPopup
+    ? 60 * 1000
+    : (await getRefreshInterval()) * 60 * 1000 * 2
 
   // 如果刷新间隔大于二十分钟，则进行扰动
   if (refreshInterval > 20 * 60 * 1000)
@@ -440,58 +389,65 @@ const refreshData = async function (uiOnly = false, fromPopup = false, forceRefr
   const badgeVisibility = await getBadgeVisibility()
 
   // 取出原始 roleList
-  const originRoleList = await readDataFromStorage<IUserDataItem[]>('roleList', [])
+  const originRoleList = await readDataFromStorage<IUserDataItem[]>(
+    'roleList',
+    [],
+  )
   // 取出启用的 role
   const enabledRoleList = originRoleList.filter((item) => {
     return item.isEnabled
   })
 
   // 如果当前还没有 selectedUid 则获取一个
-  let _selectedUid = selectedUid || await getSelectedUid()
+  let _selectedUid = selectedUid || (await getSelectedUid())
 
   if (enabledRoleList.length > 0) {
     // 查看选中uid是否已经启用
-    if (!enabledRoleList.find(item => item.uid === _selectedUid)) {
+    if (!enabledRoleList.find((item) => item.uid === _selectedUid)) {
       // 未启用则选中第一个
       _selectedUid = enabledRoleList[0]?.uid
     }
-  }
-
-  const setCookie = async (cookie: string, referer: string, ua: string) => {
-    currentCookie = cookie
-    currentReferer = referer
-    currentUA = ua
-    await updateRules()
   }
 
   let hasUpdatedBadge = false
   // 遍历启用的 role
   for (const role of enabledRoleList) {
     // 如果当前时间 - 上次更新时间 < 刷新时间间隔 或 uiOnly==true，则使用缓存
-    const useCache = (getLatestUpdatedTime(role) && Date.now() - getLatestUpdatedTime(role) < refreshInterval) || uiOnly
-    const data = useCache && !forceRefresh ? role.data : await getRoleDataByCookie(role.serverType === 'os', role.cookie, role.uid, role.serverRegion, setCookie, resetRules)
+    const useCache
+      = (getLatestUpdatedTime(role)
+        && Date.now() - getLatestUpdatedTime(role) < refreshInterval)
+      || uiOnly
+    const data
+      = useCache && !forceRefresh
+        ? role.data
+        : await getRoleDataByCookie(
+          role.serverType === 'os',
+          role.cookie,
+          role.uid,
+          role.serverRegion,
+          setExtraHeaders,
+          resetRules,
+        )
 
     if (Number.isInteger(data)) {
       // error code
       switch (data) {
-        case 1034:
-        {
+        case 1034: {
           // risk control
 
           // 尝试自动解决
-          const __ret = await autoGeetestChallenge(role.uid)
-          if (__ret)
-            return
+          // const __ret = await autoGeetestChallenge(role.uid)
+          // if (__ret)
+          //   return
 
           // 获取失败，写入错误信息
           role.isError = true
           role.errorMessage = '触发风控'
-          role.updateTimestamp = Date.now()
-          return
+          // role.updateTimestamp = Date.now()
+          break
         }
       }
-    }
-    else if (data && typeof data === 'object') {
+    } else if (data && typeof data === 'object') {
       // 更新 roleList
       const roleIndex = originRoleList.findIndex((item) => {
         return item.uid === role.uid
@@ -509,7 +465,7 @@ const refreshData = async function (uiOnly = false, fromPopup = false, forceRefr
 
       const _copyItem = calcRoleDataLocally(_newItem)
 
-      !uiOnly && await doAlertCheck(_copyItem)
+      !uiOnly && (await doAlertCheck(_copyItem))
 
       if (!badgeVisibility && !hasUpdatedBadge) {
         // 如果设置不显示 badge，则不更新
@@ -528,8 +484,7 @@ const refreshData = async function (uiOnly = false, fromPopup = false, forceRefr
           hasUpdatedBadge = true
         }
       }
-    }
-    else {
+    } else {
       // 获取失败，写入错误信息
       role.isError = true
       role.errorMessage = '获取数据失败'
@@ -538,12 +493,11 @@ const refreshData = async function (uiOnly = false, fromPopup = false, forceRefr
   }
 
   // 更新 roleList
-  !uiOnly && await writeDataToStorage('roleList', originRoleList)
+  !uiOnly && (await writeDataToStorage('roleList', originRoleList))
   !uiOnly && refreshData(true)
 }
 
 // 定时器，定时获取玩家数据
-
 const initAlarm = async (interval_time = INTERVAL_TIME) => {
   await alarms.clear('refresh_data')
   alarms.create('refresh_data', { periodInMinutes: interval_time })
@@ -575,10 +529,21 @@ const clearNotifications = async function (alertStatus: IAlertStatus) {
 }
 
 onMessage('get_alert_setting', async () => {
-  return await readDataFromStorage<IAlertSetting>('alertSetting', defaultAlertSetting)
+  return await readDataFromStorage<IAlertSetting>(
+    'alertSetting',
+    defaultAlertSetting,
+  )
 })
 
-onMessage<{ resin: boolean; resinThreshold: number; transformer: boolean; realmCurrency: boolean }, 'set_alert_setting'>('set_alert_setting', async ({ data: alertSetting }) => {
+onMessage<
+  {
+    resin: boolean
+    resinThreshold: number
+    transformer: boolean
+    realmCurrency: boolean
+  },
+  'set_alert_setting'
+>('set_alert_setting', async ({ data: alertSetting }) => {
   await writeDataToStorage('alertSetting', alertSetting)
 })
 
@@ -600,163 +565,191 @@ onMessage('refresh_request_force', async () => {
   return true
 })
 
-onMessage<{ uid: string }, 'set_selected_role'>('set_selected_role', async ({ data: { uid } }) => {
-  selectedUid = uid // update cache
-  await writeDataToStorage('selectedRole', uid)
-  refreshData(true)
-})
+onMessage<{ uid: string }, 'set_selected_role'>(
+  'set_selected_role',
+  async ({ data: { uid } }) => {
+    selectedUid = uid // update cache
+    await writeDataToStorage('selectedRole', uid)
+    refreshData(true)
+  },
+)
 
-onMessage<{ uid: string; status: boolean }, 'set_role_status'>('set_role_status', async ({ data: { uid, status } }) => {
-  const originRoleList = await readDataFromStorage<IUserDataItem[]>('roleList', [])
-  const index = originRoleList.findIndex((item) => {
-    return item.uid === uid
-  })
-  const _notificationStatus: IAlertStatus = (await getNotificationItem(uid)) || JSON.parse(JSON.stringify(defaultAlertStatus)) as IAlertStatus
+onMessage<{ uid: string; status: boolean }, 'set_role_status'>(
+  'set_role_status',
+  async ({ data: { uid, status } }) => {
+    const originRoleList = await readDataFromStorage<IUserDataItem[]>(
+      'roleList',
+      [],
+    )
+    const index = originRoleList.findIndex((item) => {
+      return item.uid === uid
+    })
+    const _notificationStatus: IAlertStatus
+      = (await getNotificationItem(uid))
+      || (JSON.parse(JSON.stringify(defaultAlertStatus)) as IAlertStatus)
 
-  originRoleList[index].isEnabled = status
-  // 重置角色提醒状态
-  clearNotifications(_notificationStatus)
-  await writeDataToStorage('roleList', originRoleList)
-  await setNotificationItem(uid, _notificationStatus)
-  // 刷新一次数据（仅刷新ui，例如badge/notification）
-  refreshData(true)
-})
+    originRoleList[index].isEnabled = status
+    // 重置角色提醒状态
+    clearNotifications(_notificationStatus)
+    await writeDataToStorage('roleList', originRoleList)
+    await setNotificationItem(uid, _notificationStatus)
+    // 刷新一次数据（仅刷新ui，例如badge/notification）
+    refreshData(true)
+  },
+)
 
-onMessage<{ uid: string; status: boolean }, 'set_role_alert_status'>('set_role_alert_status', async ({ data: { uid, status } }) => {
-  const originRoleList = await readDataFromStorage<IUserDataItem[]>('roleList', [])
-  const index = originRoleList.findIndex((item) => {
-    return item.uid === uid
-  })
-  const _notificationStatus: IAlertStatus = (await getNotificationItem(uid)) || JSON.parse(JSON.stringify(defaultAlertStatus)) as IAlertStatus
+onMessage<{ uid: string; status: boolean }, 'set_role_alert_status'>(
+  'set_role_alert_status',
+  async ({ data: { uid, status } }) => {
+    const originRoleList = await readDataFromStorage<IUserDataItem[]>(
+      'roleList',
+      [],
+    )
+    const index = originRoleList.findIndex((item) => {
+      return item.uid === uid
+    })
+    const _notificationStatus: IAlertStatus
+      = (await getNotificationItem(uid))
+      || (JSON.parse(JSON.stringify(defaultAlertStatus)) as IAlertStatus)
 
-  originRoleList[index].enabledAlert = status
-  // 重置角色提醒状态
-  clearNotifications(_notificationStatus)
-  await writeDataToStorage('roleList', originRoleList)
-  await setNotificationItem(uid, _notificationStatus)
-})
+    originRoleList[index].enabledAlert = status
+    // 重置角色提醒状态
+    clearNotifications(_notificationStatus)
+    await writeDataToStorage('roleList', originRoleList)
+    await setNotificationItem(uid, _notificationStatus)
+  },
+)
 
-onMessage<{ uid: string }, 'delete_role_request'>('delete_role_request', async ({ data: { uid } }) => {
-  // 取出原始 roleList
-  const originRoleList = await readDataFromStorage<IUserDataItem[]>('roleList', [])
-  // 删除 roleUid
-  const newRoleList = originRoleList.filter((item) => {
-    return item.uid !== uid
-  })
+onMessage<{ uid: string }, 'delete_role_request'>(
+  'delete_role_request',
+  async ({ data: { uid } }) => {
+    // 取出原始 roleList
+    const originRoleList = await readDataFromStorage<IUserDataItem[]>(
+      'roleList',
+      [],
+    )
+    // 删除 roleUid
+    const newRoleList = originRoleList.filter((item) => {
+      return item.uid !== uid
+    })
 
-  // 更新 roleList
-  await writeDataToStorage('roleList', newRoleList)
+    // 更新 roleList
+    await writeDataToStorage('roleList', newRoleList)
 
-  return true
-})
+    return true
+  },
+)
 
-onMessage<{ oversea: boolean }, 'request_cookie_read'>('request_cookie_read', async ({ data: { oversea } }) => {
-  let cookie = ''
-  // 根据服务器类型获取对应 cookie
-  if (oversea)
-    cookie = await getHoYoLABCookie()
-  else
-    cookie = await getMiHoYoCookie()
-  // cookie 获取失败，返回 false
-  if (cookie === '')
-    return -1
+onMessage<{ oversea: boolean }, 'request_cookie_read'>(
+  'request_cookie_read',
+  async ({ data: { oversea } }) => {
+    let cookie = ''
+    // 根据服务器类型获取对应 cookie
+    if (oversea)
+      cookie = await getHoYoLABCookie()
+    else cookie = await getMiHoYoCookie()
+    // cookie 获取失败，返回 false
+    if (cookie === '')
+      return -1
 
-  const setCookie = async (cookie: string, referer: string, ua: string) => {
-    currentCookie = cookie
-    currentReferer = referer
-    currentUA = ua
-    await updateRules()
-  }
+    const result = await getRoleInfoByCookie(
+      oversea,
+      cookie,
+      setExtraHeaders,
+      resetRules,
+    )
 
-  const result = await getRoleInfoByCookie(oversea, cookie, setCookie, resetRules)
+    if (result) {
+      for (const item of result) await addNewRoleToList(oversea, item, cookie)
+      await refreshData()
 
-  if (result) {
-    for (const item of result)
-      await addNewRoleToList(oversea, item, cookie)
-    await refreshData()
-
-    // 清空 cookie
-    if (oversea) {
-      // 清空 hoyolab cookie
-      await clearHoYoLABCookie()
+      // 清空 cookie
+      if (oversea) {
+        // 清空 hoyolab cookie
+        await clearHoYoLABCookie()
+      } else {
+        // 清空 mihoyo cookie
+        await clearMiHoYoCookie()
+      }
+      return result.length
+    } else {
+      return -1
     }
-    else {
-      // 清空 mihoyo cookie
-      await clearMiHoYoCookie()
-    }
-    return result.length
-  }
-  else {
-    return -1
-  }
-})
+  },
+)
 
-onMessage<{ uid: string }, 'create_verification'>('create_verification', async ({ data: { uid } }) => {
-  return await _createVerification(uid)
-})
+onMessage<{ uid: string }, 'create_verification'>(
+  'create_verification',
+  async ({ data: { uid } }) => {
+    return await _createVerification(uid)
+  },
+)
 
 async function _createVerification(uid: string) {
-  const originRoleList = await readDataFromStorage<IUserDataItem[]>('roleList', [])
+  const originRoleList = await readDataFromStorage<IUserDataItem[]>(
+    'roleList',
+    [],
+  )
   const index = originRoleList.findIndex((item) => {
     return item.uid === uid
   })
   const cookie = originRoleList[index].cookie
   const oversea = originRoleList[index].serverType === 'os'
 
-  const setCookie = async (cookie: string, referer: string, ua: string) => {
-    currentCookie = cookie
-    currentReferer = referer
-    currentUA = ua
-    await updateRules()
-  }
-
-  return await createVerification(oversea, cookie, setCookie, resetRules)
+  return await createVerification(oversea, cookie, setExtraHeaders, resetRules)
 }
 
-onMessage<{ uid: string }, 'request_captcha_bg'>('request_captcha_bg', async ({ data: { uid } }) => {
-  // open captcha tab
-  const curtab = await tabs.create({
-    url: 'https://paimon-webext.daidr.me/captcha.html',
-  })
+onMessage<{ uid: string }, 'request_captcha_bg'>(
+  'request_captcha_bg',
+  async ({ data: { uid } }) => {
+    // open captcha tab
+    const curtab = await tabs.create({
+      url: 'https://paimon-webext.daidr.me/captcha.html',
+    })
 
-  // wait for curtab loaded
-  await new Promise((resolve, reject) => {
-    const check = async () => {
-      if (curtab.id === undefined) {
-        reject(new Error('tab id is undefined'))
-        return
+    // wait for curtab loaded
+    await new Promise((resolve, reject) => {
+      const check = async () => {
+        if (curtab.id === undefined) {
+          reject(new Error('tab id is undefined'))
+          return
+        }
+
+        const tab = await tabs.get(curtab.id)
+        if (tab.status === 'complete')
+          resolve(true)
+        else setTimeout(check, 100)
       }
+      check()
+    })
 
-      const tab = await tabs.get(curtab.id)
-      if (tab.status === 'complete')
-        resolve(true)
-      else
-        setTimeout(check, 100)
-    }
-    check()
-  })
+    console.log('tab loaded')
 
-  console.log('tab loaded')
+    // send message to captcha tab
+    const originRoleList = await readDataFromStorage<IUserDataItem[]>(
+      'roleList',
+      [],
+    )
+    const index = originRoleList.findIndex((item) => {
+      return item.uid === uid
+    })
+    const cookie = originRoleList[index].cookie
+    const oversea = originRoleList[index].serverType === 'os'
 
-  // send message to captcha tab
-  const originRoleList = await readDataFromStorage<IUserDataItem[]>('roleList', [])
-  const index = originRoleList.findIndex((item) => {
-    return item.uid === uid
-  })
-  const cookie = originRoleList[index].cookie
-  const oversea = originRoleList[index].serverType === 'os'
-
-  const setCookie = async (cookie: string, referer: string, ua: string) => {
-    currentCookie = cookie
-    currentReferer = referer
-    currentUA = ua
-    await updateRules()
-  }
-
-  const verification = await createVerification(oversea, cookie, setCookie, resetRules)
-  if (verification && curtab.id)
-    await sendMessage('request_captcha', { verification, uid, tabId: curtab.id }, { tabId: curtab.id, context: 'content-script' })
-})
+    const verification = await createVerification(
+      oversea,
+      cookie,
+      setExtraHeaders,
+      resetRules,
+    )
+    if (verification && curtab.id)
+      await sendMessage(
+        'request_captcha',
+        { verification, uid, tabId: curtab.id },
+        { tabId: curtab.id, context: 'content-script' },
+      )
+  },
+)
 
 onMessage('finish_captcha', async ({ data: { tabId, uid, geetest } }) => {
   const _ret = await _verifyVerification(uid, geetest)
@@ -766,7 +759,10 @@ onMessage('finish_captcha', async ({ data: { tabId, uid, geetest } }) => {
 })
 
 async function _verifyVerification(uid: string, geetest: ICaptchaRequest) {
-  const originRoleList = await readDataFromStorage<IUserDataItem[]>('roleList', [])
+  const originRoleList = await readDataFromStorage<IUserDataItem[]>(
+    'roleList',
+    [],
+  )
   const index = originRoleList.findIndex((item) => {
     return item.uid === uid
   })
@@ -774,16 +770,15 @@ async function _verifyVerification(uid: string, geetest: ICaptchaRequest) {
   const cookie = originRoleList[index].cookie
   const oversea = originRoleList[index].serverType === 'os'
 
-  const setCookie = async (cookie: string, referer: string, ua: string) => {
-    currentCookie = cookie
-    currentReferer = referer
-    currentUA = ua
-    await updateRules()
-  }
+  const result = await verifyVerification(
+    oversea,
+    cookie,
+    geetest,
+    setExtraHeaders,
+    resetRules,
+  )
 
-  const result = await verifyVerification(oversea, cookie, geetest, setCookie, resetRules)
-
-  getRoleInfoByCookie(oversea, cookie, setCookie, resetRules)
+  getRoleInfoByCookie(oversea, cookie, setExtraHeaders, resetRules)
   refreshData(false, false, true)
   return result
 }
@@ -796,28 +791,34 @@ onMessage('read_settings', async () => {
   return settings
 })
 
-onMessage('write_settings', async ({ data: { refreshInterval, badgeVisibility } }) => {
-  await setRefreshInterval(refreshInterval)
-  await setBadgeVisibility(badgeVisibility)
-  await refreshData()
-})
+onMessage(
+  'write_settings',
+  async ({ data: { refreshInterval, badgeVisibility } }) => {
+    await setRefreshInterval(refreshInterval)
+    await setBadgeVisibility(badgeVisibility)
+    await refreshData()
+  },
+)
 
 async function autoGeetestChallenge(uid: string) {
-  const originRoleList = await readDataFromStorage<IUserDataItem[]>('roleList', [])
+  const originRoleList = await readDataFromStorage<IUserDataItem[]>(
+    'roleList',
+    [],
+  )
   const index = originRoleList.findIndex((item) => {
     return item.uid === uid
   })
   const oversea = originRoleList[index].serverType === 'os'
 
-  const setRules = async (referer: string, ua: string) => {
-    currentReferer = referer
-    currentUA = ua
-    await updateRules(true)
-  }
-
   const challenge = await _createVerification(uid)
   if (challenge) {
-    const _validate = await getGeetestChallenge(oversea, challenge.challenge, challenge.gt, setRules, resetRules)
+    const _validate = await getGeetestChallenge(
+      oversea,
+      challenge.challenge,
+      challenge.gt,
+      setExtraHeaders,
+      resetRules,
+    )
     if (_validate) {
       const _ret = await _verifyVerification(uid, {
         geetest_challenge: challenge.challenge,
