@@ -1,0 +1,293 @@
+{
+    "pluginDesc": {
+        "message": "Track Genshin Impact stats in your browser."
+    },
+    "cn_gf01": {
+        "message": "天空岛(CN)"
+    },
+    "cn_qd01": {
+        "message": "世界树(CN)"
+    },
+    "os_usa": {
+        "message": "NA"
+    },
+    "os_euro": {
+        "message": "EU"
+    },
+    "os_asia": {
+        "message": "Asia"
+    },
+    "os_cht": {
+        "message": "SAR"
+    },
+    "popup_hour": {
+        "message": ":"
+    },
+    "popup_minute": {
+        "message": ""
+    },
+    "popup_today": {
+        "message": "Hôm nay"
+    },
+    "popup_tomorrow": {
+        "message": "Ngày mai"
+    },
+    "popup_recovery_day": {
+        "message": "d"
+    },
+    "popup_recovery_hour": {
+        "message": " giờ"
+    },
+    "popup_recovery_minute": {
+        "message": " phút"
+    },
+    "popup_recovery_second": {
+        "message": " giây"
+    },
+    "popup_CurrentTitle": {
+        "message": "Hiện tại: "
+    },
+    "popup_ServerTitle": {
+        "message": "Máy chủ: "
+    },
+    "popup_ResinTitle": {
+        "message": "Nhựa Nguyên Chất"
+    },
+    "popup_FullyReplenishedTitle": {
+        "message": "Hồi phúc toàn bộ sau"
+    },
+    "popup_ETATitle": {
+        "message": "Đi Thám Hiểm"
+    },
+    "popup_ExpeditionsTitle": {
+        "message": "Phái đi thám hiểm"
+    },
+    "popup_ExploringStatus": {
+        "message": "Đang thám hiểm"
+    },
+    "popup_FinishedStatus": {
+        "message": "Hoàn thành"
+    },
+    "popup_DailyCommissionsTitle": {
+        "message": "Ủy Thác Mỗi Ngày"
+    },
+    "popup_ExtraTaskReceived": {
+        "message": "(Đã nhận)"
+    },
+    "popup_ExtraTaskNotReceived": {
+        "message": "(Chưa nhận)"
+    },
+    "popup_RealmCurrencyTitle": {
+        "message": "Tiền Động Tiên"
+    },
+    "popup_WeeklyBossesTitle": {
+        "message": "Kẻ Thù Mạnh Đáng Nhớ"
+    },
+    "popup_ParametricTransformerTitle": {
+        "message": "Máy Biến Đổi Tham Số"
+    },
+    "popup_Available": {
+        "message": "CD hoàn tất"
+    },
+    "popup_ConfigurationTitle": {
+        "message": "Thiết lập"
+    },
+    "popup_ConfigurationTips": {
+        "message": "Bạn chỉ cần hoàn thành vài bước đơn giản, và sau đó sẵn sàng trải nghiệm nó!"
+    },
+    "popup_ConfigurationButtonText": {
+        "message": "Mở cài đặt"
+    },
+    "popup_UpdateTimeTitle": {
+        "message": "Cập nhật: "
+    },
+    "popup_ErrorTitle": {
+        "message": "Lỗi"
+    },
+    "popup_ErrorTips_1": {
+        "message": "Chúng tôi không thể truy cập dữ liệu game của bạn, hãy thử vào trang cài đặt để kiểm tra xem cấu hình bên dưới đã đúng chưa."
+    },
+    "popup_ErrorTips_2": {
+        "message": "Mạng hiện có sẵn không?"
+    },
+    "popup_ErrorTips_3": {
+        "message": "Có bất kỳ nhân vật nào hiện đang được kích hoạt?"
+    },
+    "popup_ErrorTips_4": {
+        "message": "Nếu bạn ở Trung Quốc, bạn cần có proxy để truy cập dữ liệu của Quốc Tế"
+    },
+    "popup_ErrorTips_5": {
+        "message": "Tài khoản hiện tại kích hoạt kiểm soát rủi ro và yêu cầu xác minh HMI"
+    },
+    "popup_ErrorTips_6": {
+        "message": "Đăng nhập vào tài khoản của bạn và nhập lại nhân vật của bạn"
+    },
+    "popup_ErrorTips_7": {
+        "message": "Nhấp vào nút xác thực bên dưới"
+    },
+    "popup_ErrorOpenConfigButtonText": {
+        "message": "Mở Thiết Lập"
+    },
+    "popup_ErrorRefreshButtonText": {
+        "message": "Tải Lại"
+    },
+    "popup_CaptchaButtonText": {
+        "message": "Mở Trang Xác Minh"
+    },
+    "options_Nav_AddNewRole": {
+        "message": "Thêm Nhân Vật Mới"
+    },
+    "options_Nav_RoleListSetting": {
+        "message": "Danh Sách Nhân Vật"
+    },
+    "options_Nav_AlertSetting": {
+        "message": "Thông Báo"
+    },
+    "options_Nav_Setting": {
+        "message": "Tùy Chọn"
+    },
+    "options_Nav_About": {
+        "message": "Giới Thiệu"
+    },
+    "options_SelectServer": {
+        "message": "I. Chọn Vùng"
+    },
+    "options_ServerCN": {
+        "message": "Trung Quốc"
+    },
+    "options_ServerOS": {
+        "message": "Quốc Tế"
+    },
+    "options_FetchUserCookie": {
+        "message": "II. Lấy Dữ Liệu"
+    },
+    "options_Tips_1": {
+        "message": "Chúng tôi cần thông tin xác thực người dùng HoYoLAB (cookie) của bạn để truy cập dữ liệu liên quan."
+    },
+    "options_Tips_2": {
+        "message": "Đừng lo lắng, tất cả những dữ liệu này được lưu trữ cục bộ và sẽ không được gửi tới bất kỳ dịch vụ bên thứ ba nào."
+    },
+    "options_Tips_3": {
+        "message": "Vui lòng đảm bảo rằng bạn đã đăng nhập vào <a href='https://www.miyoushe.com/ys' target='_blank'>HoYoLAB (Trung Quốc)</a> trong trình duyệt này trước khi nhấp vào nút bên dưới <br> Sau khi lấy cookie thành công, Tiện ích mở rộng sẽ khôi phục HoYoLAB về trạng thái không đăng nhập để tránh trường hợp cookie bị mất hiệu lực do đăng xuất thủ công"
+    },
+    "options_Tips_4": {
+        "message": "Vui lòng đảm bảo rằng bạn đã đăng nhập vào <a href='https://www.hoyolab.com/home' target='_blank'>HoYoLAB</a> trong trình duyệt này trước khi nhấp vào nút bên dưới <br>Sau khi nhận thành công cookie, Tiện ích mở rộng sẽ khôi phục HoYoLAB về trạng thái không đăng nhập để ngăn cookie bị vô hiệu do đăng xuất thủ công <br>(HoYoLAB đã chặn truy cập từ Trung Quốc, người dùng từ Trung Quốc cần có proxy để lấy dữ liệu Quốc Tế)"
+    },
+    "options_FetchBtnTitle": {
+        "message": "Lấy Dữ Liệu"
+    },
+    "options_FetchBtnAlert_1": {
+        "message": "Lấy thông tin nhân vật thất bại"
+    },
+    "options_FetchBtnAlert_2": {
+        "message": "Thành công thêm $1 nhân vật"
+    },
+    "options_FetchBtnAlert_3": {
+        "message": "Tài khoản không có nhân vật nào"
+    },
+    "options_Role_NoRoleFound": {
+        "message": "Tài khoản không có nhân vật nào"
+    },
+    "options_Role_IsEnabledTitle": {
+        "message": "Kích Hoạt"
+    },
+    "options_Role_RoleNameTitle": {
+        "message": "Biệt Danh (uid)"
+    },
+    "options_Role_RoleServerTitle": {
+        "message": "Máy Chủ"
+    },
+    "options_Role_RoleActionTitle": {
+        "message": "Hành Động"
+    },
+    "options_About_VersionTitle": {
+        "message": "Phiên Bản"
+    },
+    "options_About_AuthorTitle": {
+        "message": "Tác Giả"
+    },
+    "options_About_Author": {
+        "message": "<a class='reverse' href='https://daidr.me' target='_blank'>daidr</a>"
+    },
+    "options_About_OpenSourceTitle": {
+        "message": "Mã Nguồn Mở"
+    },
+    "options_About_OpenSource": {
+        "message": "Tiện ích mở rộng này là mã nguồn mở và được lưu trữ trên <a class='reverse' href='https://github.com/daidr/paimon-webext' target='_blank'>Github</a>, tuân theo giấy phép sử dụng của MIT vui lòng cung cấp mã nguồn.\nBạn có thể thử tạo <a class='reverse' href='https://github.com/daidr/paimon-webext/issues' target='_blank'>Sự cố</a> nếu bạn có bất kỳ vấn đề nào và tôi sẽ giúp bạn giải quyết chúng nhiều nhất có thể. Sẽ tốt hơn nếu bạn có thể tạo PR👍"
+    },
+    "options_About_ThankTitle": {
+        "message": "Đóng Góp"
+    },
+    "options_About_Thank": {
+        "message": "Xin gửi lời cảm ơn đặc biệt đến tất cả những người đóng góp cho phần mở rộng này\nTham khảo giao diện người dùng: <a class='reverse' href='https://github.com/spencerwooo/PaimonMenuBar' target='_blank'>PaimonMenuBar</a>"
+    },
+    "options_About_DonateTitle": {
+        "message": "Ủng Hộ"
+    },
+    "options_Alert_Setting": {
+        "message": "Cài Đặt"
+    },
+    "options_Alert_Resin": {
+        "message": "thông báo đầy nhựa"
+    },
+    "options_Alert_Transformer": {
+        "message": "máy biến đổi tham số đã sẵn sàng"
+    },
+    "options_Alert_RealmCurrency": {
+        "message": "tiền động tiền đã đầy"
+    },
+    "options_Alert_NoRoleFound": {
+        "message": "Không tìm thấy nhân vật"
+    },
+    "options_Alert_IsEnabledTitle": {
+        "message": "Thông Báo"
+    },
+    "options_Alert_RoleNameTitle": {
+        "message": "Tài Khoản (uid)"
+    },
+    "options_Alert_RoleServerTitle": {
+        "message": "Máy Chủ"
+    },
+    "options_Alert_Notify_Title": {
+        "message": "Thông Báo Paimon"
+    },
+    "options_Alert_Notify_Resin": {
+        "message": "Nhựa Nguyên Chất của bạn là $1 và đã vượt ngưỡng."
+    },
+    "options_Alert_Notify_Resin_Firefox": {
+        "message": "Nhựa Nguyên Chất của $1 đã vượt ngưỡng."
+    },
+    "options_Alert_Notify_Transformer": {
+        "message": "Máy Biến Đổi Tham Số đã sẵn sàng."
+    },
+    "options_Alert_Notify_Transformer_Firefox": {
+        "message": "Máy Biến Đổi Tham Số của $1 đã sẵn sàng."
+    },
+    "options_Alert_Notify_RealmCurrency": {
+        "message": "Tiền Động Tiên đã đầy."
+    },
+    "options_Alert_Notify_RealmCurrency_Firefox": {
+        "message": "Tiền Động Tiên của $1 đã đầy."
+    },
+    "options_Setting_Apply": {
+        "message": "Áp Dụng"
+    },
+    "options_Setting_Unsaved": {
+        "message": "Không Lưu"
+    },
+    "options_Setting_Item_Badge": {
+        "message": "Hiện Nhãn"
+    },
+    "options_Setting_Item_DataRefreshInterval": {
+        "message": "Thời Gian Làm Mới"
+    },
+    "options_Setting_Item_DataRefreshInterval_Unit": {
+        "message": "phút"
+    },
+    "options_Setting_Item_DataRefreshInterval_Protips_1": {
+        "message": "Nếu hơn 10 phút, chúng tôi sẽ cố gắng gán một số dữ liệu cục bộ."
+    },
+    "options_Setting_Item_DataRefreshInterval_Protips_2": {
+        "message": "Khoảng: 3 ~ 60 phút"
+    }
+}
